@@ -70,7 +70,7 @@ bool vive_decode_sensor_packet(vive_headset_imu_packet* pkt,
 }
 
 //Trim function for removing tabs and spaces from string buffers
-void trim(const char* src, char* buff, const unsigned int sizeBuff)
+static void trim(const char* src, char* buff, const unsigned int sizeBuff)
 {
 	if(sizeBuff < 1)
 		return;
@@ -86,7 +86,7 @@ void trim(const char* src, char* buff, const unsigned int sizeBuff)
 	buff[i] = '\0';
 }
 
-void get_vec3f_from_json(const nx_json* json, const char* name, vec3f* result)
+static void get_vec3f_from_json(const nx_json* json, const char* name, vec3f* result)
 {
 	const nx_json* acc_bias_arr = nx_json_get(json, name);
 
@@ -96,7 +96,7 @@ void get_vec3f_from_json(const nx_json* json, const char* name, vec3f* result)
 	}
 }
 
-void print_vec3f(const char* title, vec3f *vec)
+static void print_vec3f(const char* title, vec3f *vec)
 {
 	LOGI("%s = %f %f %f\n", title, vec->x, vec->y, vec->z);
 }
@@ -120,7 +120,7 @@ bool vive_decode_config_packet(vive_imu_config* result,
 
 	trim((char*)output, (char*)output, (unsigned int)output_size);
 
-	const nx_json* json = nx_json_parse((char*)output, 0);
+	const nx_json* json = nx_json_parse((char*)output, NULL);
 
 	if (json) {
 		get_vec3f_from_json(json, "acc_bias", &result->acc_bias);
