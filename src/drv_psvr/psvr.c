@@ -182,13 +182,38 @@ static int getf(ohmd_device* device, ohmd_float_value type, float* out)
 	return 0;
 }
 
+struct psvr_set_mode_report {
+	uint8_t id;
+	uint8_t unknown;
+	uint8_t magic;
+	uint8_t payload_length;
+	uint32_t payload;
+} __attribute__((packed));
+
+static void psvr_set_mode(psvr_priv* priv, int mode)
+{
+	struct psvr_set_mode_report report = {
+		.id = 0x23,
+		.magic = 0xaa,
+		.payload_length = 4,
+		.payload = mode
+	};
+	int ret;
+
+	ret = hid_bulk_write(priv->hmd_control, &report, sizeof(report));
+	if (ret < 0) {
+		printf("PSVR: Failed to set %s mode: %d\n",
+			mode ? "VR" : "cinematic", ret);
+	}
+}	
+
 static void close_device(ohmd_device* device)
 {
 	psvr_priv* priv = (psvr_priv*)device;
 
 	// set cinematic mode for the hmd
-	hid_write(priv->hmd_control, psvr_cinematicmode_on, sizeof(psvr_cinematicmode_on));
-
+	//hid_write(priv->hmd_control, psvr_cinematicmode_on, sizeof(psvr_cinematicmode_on));
+    psvr_set_mode(priv, 0);
 	LOGD("Closing Sony PSVR device.");
 
 	teardown(priv);
@@ -258,6 +283,8 @@ static ohmd_device* open_device(ohmd_driver* driver, ohmd_device_desc* desc)
 		goto cleanup;
 	}
 
+	psvr_set_mode(priv, 1);
+	/*
 	// turn the display on
 	if (hid_write(priv->hmd_control, psvr_power_on, sizeof(psvr_power_on)) == -1) {
 		ohmd_set_error(driver->ctx, "failed to write to device (power on)");
@@ -268,7 +295,7 @@ static ohmd_device* open_device(ohmd_driver* driver, ohmd_device_desc* desc)
 	if (hid_write(priv->hmd_control, psvr_vrmode_on, sizeof(psvr_vrmode_on)) == -1) {
 		ohmd_set_error(driver->ctx, "failed to write to device (set VR mode)");
 		goto cleanup;
-	}
+	}*/
 
 	// Set default device properties
 	ohmd_set_default_device_properties(&priv->base.properties);
